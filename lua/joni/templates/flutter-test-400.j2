@@ -1,0 +1,29 @@
+test('{{ response.name }} {{ response.statusCode }}', () async {
+  String mockResponse = await loadJson('{{ response.jsonName }}.json');
+  
+  // TODO: Add Your Request If Available
+  // var fakeRequest = getFakeObject();
+
+  server.enqueue(httpCode: {{ response.statusCode }});
+  // TODO: use the line below if your method needs a parameters
+  // server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
+
+  var result = await repository.{{ method.name }}(fakeRequest);
+
+  var request = server.takeRequest();
+
+  expect(request.url.toString(), '{{ response.name }}');
+
+  try {
+    await repository.{{ method.name }}();
+
+    // TODO: use the line below if your method needs a parameters
+    // await repository.{{ method.name }}(fakeRequest);
+  } catch (e) {
+    expect(e.runtimeType, ErrorResponse<String>);
+    var err = e as ErrorResponse<String>;
+    expect(err.errorStatus, true);
+    expect(err.errorType, "Bad Request Error");
+    expect(err.errors!.first, "Parameter 'username' required");
+  }
+});
