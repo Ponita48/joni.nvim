@@ -1,18 +1,18 @@
 test('{{ response.name }} 200', () async {
-    String mockResponse = await loadJson('{{ response.jsonName }}.json');
-    
-    // TODO: Add Your Request If Available
-    // var fakeRequest = getFakeObject();
+  String mockResponse = await loadJson('{{ response.jsonName }}.json');
+  
+  // TODO: Add Your Request If Available
+  // var fakeRequest = getFakeObject();
 
-    server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
+  server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
 
-    var result = await repository.{{ method.name }}(fakeRequest);
+  var result = await repository.{{ method.name }}(fakeRequest);
 
-    var request = server.takeRequest();
+  var request = server.takeRequest();
 
-    expect(request.url.toString(), '{{ response.name }}');
+  expect(request.url.toString(), '{{ response.name }}');
 
-    {% for attr in response.attrs %}
-    expect(result.{{ attr.name }}, {{ attr.value }});
-    {%- endfor %}
+  {% for attr in response.attrs %}
+  expect(result.{{ attr.name }}, {{ attr.value }});
+  {%- endfor %}
 });

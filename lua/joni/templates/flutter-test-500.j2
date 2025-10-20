@@ -4,7 +4,7 @@ test('{{ response.name }} 500', () async {
   // TODO: Add Your Request If Available
   // var fakeRequest = getFakeObject();
 
-  server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
+  server.enqueue(httpCode: 500, body: mockResponse);
 
   try {
     await repository.{{ method.name }}();
@@ -16,7 +16,7 @@ test('{{ response.name }} 500', () async {
     var err = e as ErrorResponse<ErrorResponseItem>;
     expect(err.errorStatus, true);
     expect(err.errorType, "General Error");
-    expect(err.errors!.first, "Internal Server Error");
+    expect(err.errors!.first.message, "Internal Server Error");
     expect(err.errors!.first.code, 500);
   }
 
