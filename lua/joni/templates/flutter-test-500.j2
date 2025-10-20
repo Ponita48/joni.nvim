@@ -1,18 +1,10 @@
-test('{{ response.name }} {{ response.statusCode }}', () async {
+test('{{ response.name }} 500', () async {
   String mockResponse = await loadJson('{{ response.jsonName }}.json');
   
   // TODO: Add Your Request If Available
   // var fakeRequest = getFakeObject();
 
-  server.enqueue(httpCode: {{ response.statusCode }});
-  // TODO: use the line below if your method needs a parameters
-  // server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
-
-  var result = await repository.{{ method.name }}(fakeRequest);
-
-  var request = server.takeRequest();
-
-  expect(request.url.toString(), '{{ response.name }}');
+  server.enqueue(httpCode: {{ response.statusCode }}, body: mockResponse);
 
   try {
     await repository.{{ method.name }}();
@@ -27,4 +19,8 @@ test('{{ response.name }} {{ response.statusCode }}', () async {
     expect(err.errors!.first, "Internal Server Error");
     expect(err.errors!.first.code, 500);
   }
+
+  var request = server.takeRequest();
+
+  expect(request.url.toString(), '{{ response.name }}');
 });
