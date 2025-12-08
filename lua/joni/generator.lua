@@ -1,33 +1,25 @@
 local M = {}
 
-local function call_command(json, template, endpoint_name, method_name)
-    local plugin_dir = debug.getinfo(1).source
-    plugin_dir = string.sub(plugin_dir, 1)
-    plugin_dir = string.match(plugin_dir, "@(.+)/%a+.%a+")
+local function call_command(jsonData, template, endpoint_name, method_name)
+    local joni = require('joni.joni')
 
-    local cmd = {
-        "python3",
-        plugin_dir .. '/' .. 'joni.py',
-        vim.fn.fnameescape(json),
-        endpoint_name,
-        method_name,
-        "--template=" .. vim.fn.fnameescape(template),
+    local args = {
+        template = template,
+        jsonName = jsonData,
+        endpoint = endpoint_name,
+        methodName = method_name,
+        statusCode = 200,
     }
 
-    return vim.system(cmd, { text = true}):wait()
+    return joni.render(args)
 end
 
 local function insert_result(result)
-    if result.code ~= 0 then
-        vim.notify("Python script failed: " .. (result.stderr or "Unknown error"), vim.log.levels.ERROR)
-        return
-    end
-
-    local output = result.stdout or ""
+    local output = result or ""
     output = output:gsub("\n$", "")
 
     if output == "" then
-        vim.notify("Python script returned no output", vim.log.levels.WARN)
+        vim.notify("script returned no output", vim.log.levels.WARN)
         return
     end
 
@@ -85,7 +77,7 @@ local function input_endpoint_name(json, template)
     end)
 end
 
-local function select_template(json)
+local function select_template(opts, json)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
@@ -100,18 +92,39 @@ local function select_template(json)
 
     pickers.new({}, {
         prompt_title = "Select Template to Use",
-        finder = finders.new_oneshot_job(
-            { "sh", "-c", string.format("find %s -type f -name '*.j2'", template_dir) }, {}),
+        finder = finders.new_oneshot_job({ "sh", "-c", string.format(
+            "find %s %s -type f -name '*.j2' -or -name '*.etlua'",
+            template_dir,
+            opts.additional_dir or vim.fn.getcwd() .. '/templates'
+        )}, {
+            entry_maker = function(entry)
+                local head = vim.fn.fnamemodify(entry, ":h")
+                local display = vim.fn.fnamemodify(entry, ":t")
+                local home = os.getenv("HOME") or "$HOME"
+
+                if head ~= template_dir then
+                    display = head:gsub(home, "~") .. '/' .. display
+                else
+                    display = '<default>/' .. display
+                end
+
+                return {
+                    value = entry,
+                    display = display,
+                    ordinal = entry,
+                }
+            end,
+        }),
         sorter = config_values.generic_sorter({}),
         previewer = previewers.vim_buffer_cat.new({}),
         attach_mappings = function(prompt_bufnr, _)
             actions.select_default:replace(function()
-                local selection = action_state.get_selected_entry()[1]
+                local selection = action_state.get_selected_entry()
                 if not selection then return end
                 actions.close(prompt_bufnr)
 
-                local file = vim.fn.fnamemodify(selection, ":t")
-                input_endpoint_name(json, file)
+                local file = vim.fn.fnamemodify(selection.value, ":t")
+                input_endpoint_name(json, selection.value)
             end)
 
             return true
@@ -119,7 +132,7 @@ local function select_template(json)
     }):find()
 end
 
-local function select_json_file()
+local function select_json_file(opts)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local actions = require("telescope.actions")
@@ -139,7 +152,7 @@ local function select_json_file()
                 local selection = action_state.get_selected_entry()[1]
                 if not selection then return end
 
-                select_template(selection)
+                select_template(opts, selection)
             end)
 
             return true
@@ -147,8 +160,8 @@ local function select_json_file()
     }):find()
 end
 
-function M.generate_here()
-    select_json_file()
+function M.generate_here(opts)
+    select_json_file(opts)
 end
 
 return M

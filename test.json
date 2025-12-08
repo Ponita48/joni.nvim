@@ -1,0 +1,27 @@
+{
+  "id": 123,
+  "write_date": "2024-07-01",
+  "partner_name": "tes abc",
+  "partner_id": 123,
+  "brand": "xxx:xxx",
+  "total_sku": 1,
+  "total_item": 5,
+  "name": "abc/asdasd",
+  "total_nominal_promo": 123,
+  "daily_sales_line": [
+    {
+      "id": 123,
+      "default_code": "002",
+      "price": 123,
+      "daily_sales_qty": 123,
+      "product_name": "xxxxx"
+    },
+    {
+      "id": 123,
+      "default_code": "002",
+      "price": 123,
+      "daily_sales_qty": 123,
+      "product_name": "xxxxx"
+    }
+  ]
+}

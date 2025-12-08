@@ -1,0 +1,62 @@
+test('<%= response.name %> 200', () async {
+  String mockResponse = await loadJson('<%= response.jsonName %>');
+  
+  // TODO: Add Your Request If Available
+  // var fakeRequest = getFakeObject();
+
+  server.enqueue(httpCode: 200, body: mockResponse);
+
+  var result = await repository.<%= method.name %>(fakeRequest);
+
+  var request = server.takeRequest();
+
+  expect(request.url.toString(), '<%= response.name %>');
+<% for i, attr in ipairs(response.attrs) do -%>
+<% if type(attr.value) == "string" then -%>
+  expect(result.<%= attr.key %>, '<%= attr.value %>');
+<% else -%>
+  expect(result.<%= attr.key %>, <%= attr.value %>);
+<% end -%>
+<% end -%>
+});
+
+test('<%= response.name %> 400', () async {
+  String mockResponse = await loadJson('error_400.json');
+
+  server.enqueue(httpCode: 400, body: mockResponse);
+
+  try {
+    await repository.<%= method.name %>();
+  } catch (e) {
+    expect(e.runtimeType, ErrorResponse<String>);
+    var err = e as ErrorResponse<String>;
+    expect(err.errorStatus, true);
+    expect(err.errorType, "Bad Request Error");
+    expect(err.errors!.first, "Parameter 'username' required");
+  }
+
+  var request = server.takeRequest();
+
+  expect(request.url.toString(), '<%= response.name %>');
+});
+
+test('<%= response.name %> 500', () async {
+  String mockResponse = await loadJson('error_500.json');
+
+  server.enqueue(httpCode: 500, body: mockResponse);
+
+  try {
+    await repository.<%= method.name %>();
+  } catch (e) {
+    expect(e.runtimeType, ErrorResponse<ErrorResponseItem>);
+    var err = e as ErrorResponse<ErrorResponseItem>;
+    expect(err.errorStatus, true);
+    expect(err.errorType, "General Error");
+    expect(err.errors!.first.message, "Internal Server Error");
+    expect(err.errors!.first.code, 500);
+  }
+
+  var request = server.takeRequest();
+
+  expect(request.url.toString(), '<%= response.name %>');
+});
